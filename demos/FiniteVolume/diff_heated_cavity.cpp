@@ -25,13 +25,19 @@ int main(int argc, char* argv[])
     double Tf = 10; // Final time
     double dt = 1e-1;
 
+    std::size_t level_min = 2;
+    std::size_t level_max = 7;
+
     std::size_t nfiles   = 0;
     fs::path path        = fs::current_path();
     std::string filename = "dhc";
 
     app.add_option("--Ra", Ra, "Rayleigh number")->capture_default_str()->group("Simulation parameters");
+    app.add_option("--Pr", Pr, "Prandtl number")->capture_default_str()->group("Simulation parameters");
     app.add_option("--Tf", Tf, "Final time")->capture_default_str()->group("Simulation parameters");
     app.add_option("--dt", dt, "Time step")->capture_default_str()->group("Simulation parameters");
+    app.add_option("--level-min", level_min, "Minimum mesh level")->capture_default_str()->group("Simulation parameters");
+    app.add_option("--level-max", level_max, "Maximum mesh level")->capture_default_str()->group("Simulation parameters");
     app.add_option("--filename", filename, "File name prefix")->capture_default_str()->group("Output");
     app.add_option("--path", path, "Output path")->capture_default_str()->group("Output");
     app.add_option("--nfiles", nfiles, "Number of output files")->capture_default_str()->group("Output");
@@ -63,7 +69,7 @@ int main(int argc, char* argv[])
 
     // Mesh creation
     auto box    = samurai::Box<double, dim>({0, 0}, {1, 1});
-    auto config = samurai::mesh_config<dim>().min_level(2).max_level(7).max_stencil_size(2);
+    auto config = samurai::mesh_config<dim>().min_level(level_min).max_level(level_max).max_stencil_size(2);
     auto mesh   = samurai::mra::make_mesh(box, config);
 
     // Fields for the Navier-Stokes equations
@@ -267,7 +273,7 @@ int main(int argc, char* argv[])
         if (t > Tf)
         {
             dt += Tf - t;
-            if (dt < 1e-10)
+            if (dt < 1e-12)
             {
                 break;
             }
@@ -352,13 +358,17 @@ int main(int argc, char* argv[])
                 samurai::save(path, fmt::format("dhc_temperature_ite_{}", nsave), mesh, temperature);
                 samurai::save(path, fmt::format("dhc_pressure_ite_{}", nsave), mesh, pressure);
             }
-            else
-            {
-                samurai::save(path, filename, mesh, temperature);
-            }
             nsave++;
         }
     } // end time loop
+    
+    // Ensure saving only at the final time for the case nfiles=1
+    if (nfiles == 1)
+    {
+        samurai::save(path, fmt::format("{}_velocity", filename), mesh, velocity);
+        samurai::save(path, fmt::format("{}_temperature", filename), mesh, temperature);
+        samurai::save(path, fmt::format("{}_pressure", filename), mesh, pressure);
+    }
 
     nonlin_solver.destroy_petsc_objects();
     samurai::finalize();
