@@ -365,9 +365,31 @@ int main(int argc, char* argv[])
     // Ensure saving only at the final time for the case nfiles=1
     if (nfiles == 1)
     {
-        samurai::save(path, fmt::format("{}_velocity", filename), mesh, velocity);
-        samurai::save(path, fmt::format("{}_temperature", filename), mesh, temperature);
-        samurai::save(path, fmt::format("{}_pressure", filename), mesh, pressure);
+        if (level_max == level_min){
+            samurai::save(path, fmt::format("{}_velocity", filename), mesh, velocity);
+            samurai::save(path, fmt::format("{}_temperature", filename), mesh, temperature);
+            samurai::save(path, fmt::format("{}_pressure", filename), mesh, pressure);
+        } else{
+            auto config_fine = samurai::mesh_config<dim>().min_level(level_max).max_level(level_max).max_stencil_size(2);
+            auto mesh_fine   = samurai::mra::make_mesh(box, config_fine);
+            
+            auto temperature_fine   = samurai::make_scalar_field<double>("temperature", mesh_fine);
+            auto pressure_fine      = samurai::make_scalar_field<double>("pressure", mesh_fine);
+            auto velocity_fine      = samurai::make_vector_field<double, dim>("velocity", mesh);
+            
+            temperature_fine.fill(0.);
+            pressure_fine.fill(0.);
+            velocity_fine.fill(0.);
+
+            samurai::transfer(temperature, temperature_fine);
+            samurai::transfer(pressure, pressure_fine);
+            samurai::transfer(velocity, velocity_fine);
+                                
+            samurai::save(path, fmt::format("{}_velocity", filename), mesh_fine, velocity_fine);
+            samurai::save(path, fmt::format("{}_temperature", filename), mesh_fine, temperature_fine);
+            samurai::save(path, fmt::format("{}_pressure", filename), mesh_fine, pressure_fine);
+
+        }
     }
 
     nonlin_solver.destroy_petsc_objects();
