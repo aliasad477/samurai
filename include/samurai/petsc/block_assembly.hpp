@@ -1075,6 +1075,19 @@ namespace samurai
             }
 
             template <class... Fields>
+            void copy_unknowns(const Vec& x, std::tuple<Fields&...>& fields) const
+            {
+                this->for_each_assembly_op(
+                    [&](auto& op, auto row, auto col)
+                    {
+                        if constexpr (row == col)
+                        {
+                            op.copy_unknown(x, std::get<row>(fields));
+                        }
+                    });
+            }
+
+            template <class... Fields>
             Vec create_applicable_vector(const std::tuple<Fields&...>& fields) const
             {
                 Vec x = create_petsc_vector(owned_matrix_cols());

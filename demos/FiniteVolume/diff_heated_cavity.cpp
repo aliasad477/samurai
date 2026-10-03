@@ -375,7 +375,7 @@ int main(int argc, char* argv[])
             
             auto temperature_fine   = samurai::make_scalar_field<double>("temperature", mesh_fine);
             auto pressure_fine      = samurai::make_scalar_field<double>("pressure", mesh_fine);
-            auto velocity_fine      = samurai::make_vector_field<double, dim>("velocity", mesh);
+            auto velocity_fine      = samurai::make_vector_field<double, dim>("velocity", mesh_fine);
             
             temperature_fine.fill(0.);
             pressure_fine.fill(0.);

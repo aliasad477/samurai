@@ -6,6 +6,7 @@ heat_nonlinear.cpp:finite-volume-heat-nonlinear
 stokes_2d.cpp:finite-volume-stokes-2d
 lid_driven_cavity.cpp:finite-volume-lid-driven-cavity
 diff_heated_cavity.cpp:finite-volume-diff-heated-cavity
+diff_heated_cavity_ts.cpp:finite-volume-diff-heated-cavity-ts
 nagumo.cpp:finite-volume-nagumo
 manual_block_matrix_assembly.cpp:manual_block_matrix_assembly
 linear_convection.cpp:finite-volume-linear-convection
